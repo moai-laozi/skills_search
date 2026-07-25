@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skill-harvester"
+version = "0.1.0"
+description = "Automatically discover, inspect, score, deduplicate, and report public Agent Skills from GitHub."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "requests>=2.32.3,<3",
+  "PyYAML>=6.0.2,<7",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3,<9"]
+
+[project.scripts]
+skill-harvester = "skill_harvester.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["skill_harvester*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

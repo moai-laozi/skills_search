@@ -1,0 +1,59 @@
+github:
+  api_url: "https://api.github.com"
+  api_version: "2026-03-10"
+  token_env: "GH_SEARCH_TOKEN"
+  fallback_token_env: "GITHUB_TOKEN"
+  request_timeout_seconds: 30
+  request_interval_seconds: 0.15
+  max_retries: 4
+  max_retry_wait_seconds: 90
+  search_interval_seconds: 7
+  per_page: 100
+  max_pages_per_query: 1
+  max_candidates_total: 500
+  max_candidates_per_query: 100
+  max_file_bytes: 250000
+
+search:
+  # GitHub code-search syntax. Add domain-specific queries here.
+  queries:
+    - 'filename:SKILL.md path:skills'
+    - 'filename:SKILL.md path:.agents/skills'
+    - 'filename:SKILL.md path:.claude/skills'
+    - '"code review" filename:SKILL.md'
+    - 'testing filename:SKILL.md'
+    - 'debugging filename:SKILL.md'
+    - 'research filename:SKILL.md'
+    - 'matlab filename:SKILL.md'
+    - '"scientific computing" filename:SKILL.md'
+  trusted_owners:
+    - anthropics
+    - openai
+    - github
+    - microsoft
+    - google
+    - cloudflare
+    - vercel
+    - huggingface
+    - trailofbits
+  blocked_owners: []
+  skip_archived_repositories: true
+  # 0 means no hard star filter. Stars are still used in quality scoring.
+  minimum_repository_stars: 0
+
+storage:
+  database_path: "data/skills.db"
+  jsonl_path: "data/skills.jsonl"
+  report_directory: "reports"
+
+scoring:
+  recommended_score: 70
+  review_score: 50
+  maximum_skill_lines: 500
+  maximum_estimated_tokens: 5000
+  freshness_days: 730
+
+report:
+  top_n: 100
+  include_invalid: true
+  write_dated_report: true
