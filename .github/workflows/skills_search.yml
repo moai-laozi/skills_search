@@ -30,28 +30,73 @@ jobs:
           cache: pip
 
       - name: Install project
-        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run tests
         run: pytest
 
-      - name: Discover and report
+      - name: Discover and generate reports
         env:
-          # Recommended: create the repository secret GH_SEARCH_TOKEN.
           GH_SEARCH_TOKEN: ${{ secrets.GH_SEARCH_TOKEN }}
-          # Fallback token. The package automatically uses it when GH_SEARCH_TOKEN is empty.
           GITHUB_TOKEN: ${{ github.token }}
-        run: python -m skill_harvester --config config/config.yml run
+        run: |
+          python -m skill_harvester \
+            --config config/config.yml \
+            run
+
+      - name: Show generated files
+        shell: bash
+        run: |
+          echo "===== data ====="
+          find data -maxdepth 2 -type f -printf "%p  %s bytes\n" || true
+
+          echo "===== reports ====="
+          find reports -maxdepth 2 -type f -printf "%p  %s bytes\n" || true
+
+          echo "===== git status ====="
+          git status --short -- data reports
+
+      - name: Verify expected output
+        shell: bash
+        run: |
+          test -f data/skills.db
+          test -f data/skills.jsonl
+          test -f reports/latest.md
+          test -f reports/latest.csv
+
+      - name: Upload generated results
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-harvester-results
+          path: |
+            data/skills.db
+            data/skills.jsonl
+            reports/*.md
+            reports/*.csv
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Commit updated catalog and reports
         shell: bash
         run: |
-          if git diff --quiet -- data reports; then
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # 必须先 git add。
+          # 这样新生成的 untracked 文件才会进入暂存区。
+          git add data reports
+
+          # 检查暂存区，而不是仅检查已跟踪文件的工作区差异。
+          if git diff --cached --quiet; then
             echo "No catalog changes."
             exit 0
           fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data reports
+
+          echo "Files to commit:"
+          git diff --cached --stat
+
           git commit -m "chore: update skill catalog [skip ci]"
           git push
